@@ -20,7 +20,7 @@
     "url": "git+https://github.com/xwang2713/jpecl-kernel.git"
   },
   "dependencies": {
-    "jmp": "^0.7.2",
+    "jmp": "1.0.0",
     "nel": "0.5.x"
   },
   "devDependencies": {
