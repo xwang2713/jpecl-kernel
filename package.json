@@ -1,6 +1,6 @@
 {
   "name": "jpecl-kernel",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Generic Node.js kernel for the Jupyter notebook",
   "keywords": [
     "kernel",
@@ -20,15 +20,15 @@
     "url": "git+https://github.com/xwang2713/jpecl-kernel.git"
   },
   "dependencies": {
-    "jmp": "^0.7.2",
-    "nel": "0.5.x"
+    "jmp": "1",
+    "nel": "^1.1.0",
+    "uuid": "3"
   },
   "devDependencies": {
-    "debug": "latest",
-    "jsdoc": "latest",
-    "jshint": "latest",
-    "mocha": "3",
-    "uuid": "3"
+    "debug": "2",
+    "jsdoc": "3",
+    "eslint": "2",
+    "mocha": "3"
   },
   "scripts": {
     "doc": "jsdoc -R README.md -d docs index.js lib",

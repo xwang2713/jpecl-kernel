@@ -41,7 +41,6 @@ var DEBUG = !!process.env.DEBUG;
 var assert = require("assert");
 var console = require("console");
 var crypto = require("crypto");
-var fs = require("fs");
 var path = require("path");
 var util = require("util");
 var uuid = require("uuid");
@@ -101,7 +100,7 @@ function MessagingTestEngine(protocolVersion) {
     this.socket = {};
 
     /**
-     * @member      {?module:jpecl-kernel~Kernel} kernel
+     * @member      {?module:jp-kernel~Kernel} kernel
      * @description Kernel instance
      */
     this.kernel = null;
@@ -186,20 +185,20 @@ MessagingTestEngine.prototype.init = function(done) {
     this._initSockets();
     this._initKernel();
 
-    var socketNames = ["hb", "shell", "iopub", "control"];
+    var socketNames = ["hb", "shell", "stdin", "iopub", "control"];
 
     var waitGroup = socketNames.length;
     function onConnect() {
         waitGroup--;
         if (waitGroup === 0) {
-            for(var i = 0; i < socketNames.length; i++) {
+            for (var i = 0; i < socketNames.length; i++) {
                 this.socket[socketNames[i]].unmonitor();
             }
             if (done) done();
         }
     }
 
-    for(var j = 0; j < socketNames.length; j++) {
+    for (var j = 0; j < socketNames.length; j++) {
         this.socket[socketNames[j]].on("connect", onConnect.bind(this));
         this.socket[socketNames[j]].monitor();
     }
@@ -241,7 +240,8 @@ MessagingTestEngine.prototype._initSockets = function() {
     var ip = "127.0.0.1";
     var address = transport + "://" + ip + ":";
     var scheme = "sha256";
-    var key = crypto.randomBytes(256).toString('base64');
+    var key = crypto.randomBytes(256).toString("base64");
+    var identity = uuid.v4();
 
     this.connection = {
         transport: transport,
@@ -258,6 +258,8 @@ MessagingTestEngine.prototype._initSockets = function() {
         var socket = (socketName === "hb") ?
             new zmq.Socket(socketType) :
             new jmp.Socket(socketType, scheme, key);
+        socket.identity = identity;
+
         var port = Math.floor(1024 + Math.random() * (65536 - 1024));
 
         try {
@@ -336,6 +338,7 @@ MessagingTestEngine.prototype._disposeSockets = function() {
     this.socket.stdin.close();
 };
 
+/* eslint-disable complexity */
 /**
  * @method      _onMessage
  * @description Handle kernel message
@@ -377,11 +380,14 @@ MessagingTestEngine.prototype._onMessage = function(message, socketName) {
     }
 
     if (this._currentTestCase) {
-        if (DEBUG) console.log("Remaining tests", this._currentTestCase.responses);
+        if (DEBUG) {
+            console.log("Remaining tests", this._currentTestCase.responses);
+        }
     } else {
         if (DEBUG) console.log("No remaining tests");
     }
 };
+/* eslint-enable complexity */
 
 /**
  * @method      run
@@ -407,7 +413,7 @@ MessagingTestEngine.prototype.run = function(testCase) {
         this.version.protocol
     );
 
-    if (DEBUG) console.log("Running", util.inspect(testCase, { depth: 3 }));
+    if (DEBUG) console.log("Running", util.inspect(testCase, {depth: 3}));
 };
 
 /**
@@ -428,7 +434,7 @@ MessagingTestEngine.prototype._end = function() {
  */
 MessagingTestEngine.prototype._testResponse = function(message, socketName) {
     var responseTest = this._currentTestCase.responses;
-    if (typeof(responseTest) === "function") {
+    if (typeof responseTest === "function") {
         var expectingMoreResponses = responseTest(message, socketName);
         if (!expectingMoreResponses) {
             this._end();
@@ -483,7 +489,7 @@ MessagingTestEngine.prototype._testResponse = function(message, socketName) {
  * @static
  */
 MessagingTestEngine.compareMessage = function(observed, expected, description) {
-    if (typeof(expected) !== 'object') {
+    if (typeof expected !== "object") {
         assert.strictEqual(
             observed,
             expected,
